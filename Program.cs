@@ -44,7 +44,6 @@ namespace AutoEncryptAge
             await Init();
 
             await WatchDir(input_dir);
-
         }
 
         private static async Task WatchDir(DirectoryInfo dir)
@@ -61,11 +60,17 @@ namespace AutoEncryptAge
 
                 foreach (var file in files)
                 {
-                    EncryptFile(file);
+                    var encrypted = EncryptFile(file);
 
-                    //todo check success
-                    if (delete_files_after_enc)
+                    /// Delete orig file ONLY IF:
+                    /// 1. delete_files_after_enc == true
+                    /// 2. encrypted file was created
+                    /// 3. encrypted file has some realistic size = at least 1/2 of input file size
+                    if (delete_files_after_enc && encrypted.Exists && encrypted.Length > ((float)file.Length / 2f))
                         File.Delete(file.FullName);
+                    else
+                        PrintError($"File not encrypted {file.FullName}");
+                    
                 }
 
                 if (delete_dirs_after_enc)
@@ -73,7 +78,6 @@ namespace AutoEncryptAge
 
                 await Task.Delay(TimeSpan.FromSeconds(2));
             }
-
         }
 
         /// <summary>
@@ -135,25 +139,32 @@ namespace AutoEncryptAge
                 var pubkey = File.ReadAllLines(privkey_path).Where(line => line.StartsWith("# public key:")).First().Split(":")[1].Trim();
                 File.WriteAllText(age_pub_keys.FullName, pubkey);
                 Console.WriteLine($"Public key is in {age_pub_keys.FullName}, this will be used for encryption, no need to have private key around if you don't need to decrypt here.");
-
             }
         }
 
         /// <summary>
         /// Call age binary to encrypt file to destination
         /// </summary>
-        private static void EncryptFile(FileInfo file)
+        private static FileInfo EncryptFile(FileInfo file)
         {
-            var out_file = new FileInfo(  file.FullName.Replace(input_dir.FullName, output_dir.FullName) );
+            var out_file = new FileInfo(file.FullName.Replace(input_dir.FullName, output_dir.FullName) + ".age");
 
             var dir = out_file.Directory;
-            if(!dir.Exists) dir.Create();
-            
+            if (!dir.Exists) dir.Create();
+
             Console.WriteLine("Encrypting " + file);
-            Process.Start(fileName: Path.Combine(age_binary_path.FullName, "age.exe"), 
-                          arguments: $"-e -o \"{out_file.FullName}.age\" -R {age_pub_keys} \"{file.FullName}\"")
+            Process.Start(fileName: Path.Combine(age_binary_path.FullName, "age.exe"),
+                          arguments: $"-e -o \"{out_file.FullName}\" -R {age_pub_keys} \"{file.FullName}\"")
             .WaitForExit(); //need to wait for age to finish, otherwise the file gets deleted too soon
 
+            return out_file;
+        }
+
+        private static void PrintError(string error)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(error);
+            Console.ResetColor();
         }
 
         /// <summary>
