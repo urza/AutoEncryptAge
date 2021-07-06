@@ -22,7 +22,7 @@ Options:
 
 When you run it without arguments, it will create this folder sructure in the current directory, download age if necessery and generate new key pair for encryption.
  
-![image](https://user-images.githubusercontent.com/189804/124634792-03c31580-de87-11eb-9c06-19099f5e8fe4.png)
+![image](https://user-images.githubusercontent.com/189804/124640962-7257a180-de8e-11eb-9301-12c76f783e59.png)
 
  And will start watching the `input-dir` ("2encrypt" by default) folder. When you put any file in it, it will ecnrypt it with all pubkeys in `pubkeys` and move it to `output-dir` ("encrypted" by default) folder.
  
