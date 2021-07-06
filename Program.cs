@@ -21,10 +21,10 @@ namespace AutoEncryptAge
         /// <summary>
         /// Watch for files created in input directory, encrypt them by Age (https://github.com/FiloSottile/age) and move to output directory.
         /// </summary>
-        /// <param name="initDir">By default this si current directory where you started the app. You can instead provide absolute path.</param>
+        /// <param name="initDir">By default this is current directory where you started the app. You can instead provide absolute path to somewhere else. In such case that will be the default starting point for other directories.</param>
         /// <param name="inputDir">Directory to watch for files you want to encrypt. Default is "init-dir/2encrypt", but you can also specify absolute path.</param>
-        /// <param name="outputDir">Encrypted files are moved here. Default is initDir/encrypted. When encrypting from input dir, relative subdirectory structure is preserved. Filenames have .age extenion (original extension is kept)</param>
-        /// <param name="pubkeys">File with Age pubkeys, is used as -R arg with Age.</param>
+        /// <param name="outputDir">Encrypted files are moved here. Default is initDir/encrypted. When encrypting from input dir, relative subdirectory structure is preserved. Encrypted files have additional .age extenion</param>
+        /// <param name="pubkeys">File with Age pubkeys, is used as -R arg with Age, may contain multiple public keys (each on new line).</param>
         /// <param name="ageBinaryPath">Where to look for Age binary. Will be downloaded from https://github.com/FiloSottile/age/releases if necessary.</param>
         /// <param name="deleteFilesAfterEncryption">Default is true.</param>
         /// <param name="deleteDirsAfterEncryption">Default is true. Only delete if empty.</param>
@@ -52,6 +52,7 @@ namespace AutoEncryptAge
             // tried to use FileWatcher, but it has errors when more files is copied at once, and ms recommends polling..
             // https://stackoverflow.com/questions/15519089/avoid-error-too-many-changes-at-once-in-directory
 
+            Console.WriteLine();
             Console.WriteLine("watching directory " + input_dir);
 
             while (true)
@@ -75,32 +76,33 @@ namespace AutoEncryptAge
         }
 
         /// <summary>
-        /// if necessary create directories, download age binary, generate key pair 
+        /// if necessary create directories, download Age binary, generate new key pair 
         /// </summary>
         private static async Task Init()
         {
             if (!input_dir.Exists)
             {
-                Console.WriteLine($"creating input directory at {input_dir}");
+                Console.WriteLine($"Creating input directory at {input_dir}");
                 input_dir.Create();
             }
 
             if (!output_dir.Exists)
             {
-                Console.WriteLine($"creating output directory at {output_dir}");
+                Console.WriteLine($"Creating output directory at {output_dir}");
                 output_dir.Create();
             }
 
             if (!age_binary_path.Exists)
             {
-                Console.WriteLine($"creating age_binary_path directory at {age_binary_path}");
+                Console.WriteLine($"Creating age_binary_path directory at {age_binary_path}");
                 age_binary_path.Create();
             }
 
             /// download from github and unzip to age_binary_path
             if (!File.Exists(Path.Combine(age_binary_path.FullName, "age.exe")))
             {
-                Console.WriteLine($"downloading binary release of age");
+                Console.WriteLine();
+                Console.WriteLine($"Downloading binary release of Age from https://github.com/FiloSottile/age/releases");
                 string releaseUrl = "https://github.com/FiloSottile/age/releases/download/v1.0.0-rc.3/age-v1.0.0-rc.3-windows-amd64.zip";
                 
                 age_binary_path.Delete(recursive:true);
@@ -120,7 +122,7 @@ namespace AutoEncryptAge
             /// pubkey not detected, generate ney key pair
             if (!age_pub_keys.Exists)
             {
-                Console.WriteLine("generating new age key pair:");
+                Console.WriteLine("generating new Age key pair:");
                 var privkey_path = Path.Combine(init_dir.FullName, "age_private.key");
                 Process.Start(Path.Combine(age_binary_path.FullName, "age-keygen.exe"), $"-o {privkey_path}").WaitForExit();
                 await Task.Delay(500);
@@ -131,7 +133,7 @@ namespace AutoEncryptAge
                 Console.ResetColor();
                 var pubkey = File.ReadAllLines(privkey_path).Where(line => line.StartsWith("# public key:")).First().Split(":")[1].Trim();
                 File.WriteAllText(age_pub_keys.FullName, pubkey);
-                Console.WriteLine($"public key is in {age_pub_keys.FullName}, this will be used to encryption, no need to have private key around if you dont need to decrypt");
+                Console.WriteLine($"Public key is in {age_pub_keys.FullName}, this will be used for encryption, no need to have private key around if you don't need to decrypt here.");
 
             }
         }
