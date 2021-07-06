@@ -19,13 +19,13 @@ namespace AutoEncryptAge
         static bool delete_dirs_after_enc;
 
         /// <summary>
-        /// Watch for files created in input directory, encrypt them by Age (https://github.com/FiloSottile/age) and move to output directory.
+        /// Watch for files created in input directory, encrypt them by age (https://github.com/FiloSottile/age) and move to output directory.
         /// </summary>
         /// <param name="initDir">By default this is current directory where you started the app. You can instead provide absolute path to somewhere else. In such case that will be the default starting point for other directories.</param>
         /// <param name="inputDir">Directory to watch for files you want to encrypt. Default is "init-dir/2encrypt", but you can also specify absolute path.</param>
         /// <param name="outputDir">Encrypted files are moved here. Default is initDir/encrypted. When encrypting from input dir, relative subdirectory structure is preserved. Encrypted files have additional .age extenion</param>
-        /// <param name="pubkeys">File with Age pubkeys, is used as -R arg with Age, may contain multiple public keys (each on new line).</param>
-        /// <param name="ageBinaryPath">Where to look for Age binary. Will be downloaded from https://github.com/FiloSottile/age/releases if necessary.</param>
+        /// <param name="pubkeys">File with age pubkeys, is used as -R arg with age, may contain multiple public keys (each on new line).</param>
+        /// <param name="ageBinaryPath">Where to look for age binary. Will be downloaded from https://github.com/FiloSottile/age/releases if necessary.</param>
         /// <param name="deleteFilesAfterEncryption">Default is true.</param>
         /// <param name="deleteDirsAfterEncryption">Default is true. Only delete if empty.</param>
         /// <returns></returns>
@@ -76,7 +76,7 @@ namespace AutoEncryptAge
         }
 
         /// <summary>
-        /// if necessary create directories, download Age binary, generate new key pair 
+        /// if necessary create directories, download age binary, generate new key pair 
         /// </summary>
         private static async Task Init()
         {
@@ -102,7 +102,7 @@ namespace AutoEncryptAge
             if (!File.Exists(Path.Combine(age_binary_path.FullName, "age.exe")))
             {
                 Console.WriteLine();
-                Console.WriteLine($"Downloading binary release of Age from https://github.com/FiloSottile/age/releases");
+                Console.WriteLine($"Downloading binary release of age from https://github.com/FiloSottile/age/releases");
                 string releaseUrl = "https://github.com/FiloSottile/age/releases/download/v1.0.0-rc.3/age-v1.0.0-rc.3-windows-amd64.zip";
                 
                 age_binary_path.Delete(recursive:true);
@@ -122,7 +122,7 @@ namespace AutoEncryptAge
             /// pubkey not detected, generate ney key pair
             if (!age_pub_keys.Exists)
             {
-                Console.WriteLine("generating new Age key pair:");
+                Console.WriteLine("generating new age key pair:");
                 var privkey_path = Path.Combine(init_dir.FullName, "age_private.key");
                 Process.Start(Path.Combine(age_binary_path.FullName, "age-keygen.exe"), $"-o {privkey_path}").WaitForExit();
                 await Task.Delay(500);
