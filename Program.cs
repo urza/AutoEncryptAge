@@ -63,6 +63,7 @@ namespace AutoEncryptAge
                 {
                     EncryptFile(file);
 
+                    //todo check success
                     if (delete_files_after_enc)
                         File.Delete(file.FullName);
                 }
